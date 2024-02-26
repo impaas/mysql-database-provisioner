@@ -1,0 +1,9 @@
+Flask
+mysql
+azure-mgmt-resource
+azure-mgmt-rdbms
+azure-identity
+mysql-connector-python
+adal
+msrestazure
+pymysql
