@@ -28,8 +28,8 @@ def add_instance():
         username, password = decoded_credentials.split(':', 1)
         print("\nUsername:", username)
         print("Password:", password)
-	if username != username_required or password != password_required:
-		return "Incorrect credentials provided\n", 400
+        if username != username_required or password != password_required:
+            return "Incorrect credentials provided\n", 400
 
 
     # Printing request body
