@@ -26,15 +26,8 @@ def add_instance():
         encoded_credentials = auth_header[len('Basic '):]
         decoded_credentials = base64.b64decode(encoded_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':', 1)
-        print("\nUsername:", username)
-        print("Password:", password)
         if username != username_required or password != password_required:
             return "Incorrect credentials provided\n", 400
-
-
-    # Printing request body
-    print("\nRequest Body:")
-    print(request.get_data(as_text=True))
 
 
     name = request.form.get("name")
@@ -47,6 +40,8 @@ def add_instance():
     #create database
     if not name:
         return "Name not provided\n", 400
+    if '-' in name:
+        return "No hyphens in name allowed\n", 400
     # TODO: Error handling; check if database already exists
     create_database_query = f"CREATE DATABASE IF NOT EXISTS {name}"
     print(create_database_query)
@@ -66,8 +61,6 @@ def bind_app(name):
         encoded_credentials = auth_header[len('Basic '):]
         decoded_credentials = base64.b64decode(encoded_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':', 1)
-        print("\nUsername:", username)
-        print("Password:", password)
         if username != username_required or password != password_required:
                 return "Incorrect credentials provided\n", 400
     # use name and app-name to bind the service instance and the 
@@ -114,8 +107,6 @@ def unbind_app(name):
         encoded_credentials = auth_header[len('Basic '):]
         decoded_credentials = base64.b64decode(encoded_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':', 1)
-        print("\nUsername:", username)
-        print("Password:", password)
         if username != username_required or password != password_required:
                 return "Incorrect credentials provided\n", 400
     app_name = request.form.get("app-name")
@@ -146,8 +137,6 @@ def remove_instance(name):
         encoded_credentials = auth_header[len('Basic '):]
         decoded_credentials = base64.b64decode(encoded_credentials).decode('utf-8')
         username, password = decoded_credentials.split(':', 1)
-        print("\nUsername:", username)
-        print("Password:", password)
         if username != username_required or password != password_required:
                 return "Incorrect credentials provided\n", 400
 
