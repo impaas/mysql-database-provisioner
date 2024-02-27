@@ -1,3 +1,4 @@
+import os
 import json
 import pymysql
 import random
@@ -9,15 +10,13 @@ hostname = '20.117.188.21'
 
 @app.route("/resources/plans", methods=["GET"])
 def plans():
-    plans = [{"name": "small", "description": "small instance"}]
+    plans = [{"name": "Database", "description": "A MySQL database instance"}]
     return json.dumps(plans)
 
 
 @app.route("/resources", methods=["POST"])
 def add_instance():
     name = request.form.get("name")
-    plan = request.form.get("plan")
-    team = request.form.get("team")
     # use the given parameters to create the instance
     conn = pymysql.connect(host=hostname,
                        user='root',
@@ -25,24 +24,25 @@ def add_instance():
     cursor = conn.cursor()
 
     #create database
-    new_database_name = name
-    create_database_query = f"CREATE DATABASE IF NOT EXISTS {new_database_name}"
+    if not name:
+        return "Name not provided\n", 400
+    # TODO: Error handling; check if database already exists
+    create_database_query = f"CREATE DATABASE IF NOT EXISTS {name}\n"
     cursor.execute(create_database_query)
 
     conn.commit()
     cursor.close()
     conn.close()
-    return "", 201
+    return f"The Database: {name} has been created!", 201
 
 
 @app.route("/resources/<name>/bind-app", methods=["POST"])
 def bind_app(name):
-
-    # name: name of instance (and name of database)
-    # app_name
-    # : name of app
-
+    # use name and app-name to bind the service instance and the 
+    # application
     app_name = request.form.get("app-name")
+    if not app_name:
+        return "No app-name provided\n", 400
     
     conn = pymysql.connect(host=hostname,
                     user='root',
@@ -52,14 +52,14 @@ def bind_app(name):
     # create specific db user
     new_username = name + app_name
     new_user_password = app_name + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-    create_user_query = f"CREATE USER '{new_username}'@'localhost' IDENTIFIED BY '{new_user_password}'"
+    create_user_query = f"CREATE USER '{new_username}'@'%' IDENTIFIED BY '{new_user_password}'"
     cursor.execute(create_user_query)
     
     ## Grant privileges to the new user on the new database
     grant_privileges_query = f"GRANT ALL PRIVILEGES ON {name}.* TO '{new_username}'"
     cursor.execute(grant_privileges_query)
 
-    envs = {"SOMEVAR": "somevalue",
+    envs = {
     "MYSQL_PORT" : "3306",
     "MYSQL_PASSWORD": new_user_password,
     "MYSQL_USER": new_username,
@@ -76,7 +76,9 @@ def bind_app(name):
 @app.route("/resources/<name>/bind-app", methods=["DELETE"])
 def unbind_app(name):
     app_name = request.form.get("app-name")
-    
+    if not app_name:
+        return "No app-name provided\n", 400
+
     conn = pymysql.connect(host=hostname, user="root", password="rootmysqltsuru")
 
     cursor = conn.cursor()
@@ -90,7 +92,7 @@ def unbind_app(name):
     cursor.close()
     conn.close()
     
-    return "", 200
+    return f"{user_to_delete} has been removed; application unbound", 200
 
 
 @app.route("/resources/<name>", methods=["DELETE"])
@@ -107,24 +109,24 @@ def remove_instance(name):
     conn.commit()
     cursor.close()
     conn.close()
-    return "", 200
+    return f"Database: {name} has been deleted", 200
 
 
 @app.route("/resources/<name>/bind", methods=["POST", "DELETE"])
 def access_control(name):
-    app_host = request.form.get("app-host")
-    unit_host = request.form.get("unit-host")
+    # app_host = request.form.get("app-host")
+    # unit_host = request.form.get("unit-host")
     # use unit-host and app-host, according to the access control tool, and
     # the request method.
     #TODO
-    return "", 201
+    return "Server does not support this operation", 400
 
 
 @app.route("/resources/<name>/status", methods=["GET"])
 def status(name):
-    # check the status of the instance named "name
-    # TODO
-    return "", 204
+#     # check the status of the instance named "name
+#     # TODO
+    return "Server does not support this operation", 204
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 4999)))
