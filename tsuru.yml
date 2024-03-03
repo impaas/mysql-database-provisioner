@@ -1,5 +1,0 @@
-hooks:
-  build:
-    - python hook.py
-healthcheck:
-  path: /
